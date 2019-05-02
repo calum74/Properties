@@ -105,6 +105,6 @@ Properties do not themselves raise exceptions, and are exception-neutral. Except
 # Supported compilers
 This should work on most C++ compilers. Tested compilers include:
 
-- Visual Studio 2019 (MSVC 19)
-- Visual Studio 2017 (MSVC 17)
+- Visual Studio 2019
+- Visual Studio 2017
 - GCC 7.3.0
