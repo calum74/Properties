@@ -103,4 +103,8 @@ Properties are themselves thread-safe, and may be called from multiple threads. 
 Properties do not themselves raise exceptions, and are exception-neutral. Exceptions thrown by `get_` and `set_` methods are passed to the caller. It is the responsibility of the `get_` and `set_` methods to implement appropriate exception guarantees, consistent with C++ best practice.
 
 # Supported compilers
-TODO: Test this.
+This should work on most C++ compilers. Tested compilers include:
+
+- Visual Studio 2019 (MSVC 19)
+- Visual Studio 2017 (MSVC 17)
+- GCC 7.3.0
