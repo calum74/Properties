@@ -59,15 +59,13 @@ bool Property<Person, bool>::Get() const
 {
     return Object<&Person::Adult>().Age >= 18;
 }
-This is rejected simply because there is too much scope for making mistakes with the `Object<>()` function.
+```
+The problem with this approach is that there sometimes needs to be a type-tag to distinguish different properties with the same type in the same object, and there were just too many ways to shoot yourself in the foot. It requires the methods to be defined out of line, and need the slightly awkward `Object<&Person::Adult>()` call to map from the property to the object.
 
 The assignment and copy constructors do NOT set the property. This is because it's not clear which properties should be set, and
 often the underlying field is copied instead. It could be dangerous to set a property before the underlying field has been initialized, making properties sensitive to declaration order.
 
 The getter is `const` to match const semantics. Getters often have side-effects, however there are other ways to solve this problem. Getters should be semantically const.
-
-```
-The problem with this approach is that there sometimes needs to be a type-tag to distinguish different properties with the same type in the same object, and there were just too many ways to shoot yourself in the foot. It requires the methods to be defined out of line, and need the slightly awkward `Object<&Person::Adult>()` call to map from the property to the object.
 
 # Reference
 ## Header file
