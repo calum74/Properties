@@ -15,8 +15,8 @@
 		operator Type() const { return Get(); } \
 		Type operator*() const { return Get(); } \
     private: \
-		const Outer & get_Object() const { return *reinterpret_cast<const Outer*>(reinterpret_cast<const char*>(this) - reinterpret_cast<const char*>(&((Outer*)nullptr)->Name)); } \
-		Outer & get_Object() { return *reinterpret_cast<Outer*>(reinterpret_cast<char*>(this) - reinterpret_cast<char*>(&((Outer*)nullptr)->Name)); } \
+		const Outer & get_Object() const { return *reinterpret_cast<const Outer*>(reinterpret_cast<const char*>(this) - (reinterpret_cast<const char*>(&((Outer*)nullptr)->Name) - reinterpret_cast<char*>((Outer*)nullptr))); } \
+		Outer & get_Object() { return *reinterpret_cast<Outer*>(reinterpret_cast<char*>(this) - (reinterpret_cast<char*>(&((Outer*)nullptr)->Name) - reinterpret_cast<char*>((Outer*)nullptr))); } \
         friend Outer; \
         Name##_type() { } \
         Name##_type(const Name##_type&) { } \
@@ -29,7 +29,7 @@
 		operator Type() const { return Get(); } \
 		Type operator*() const { return Get(); } \
     private: \
-		const Outer & get_Object() const { return *reinterpret_cast<const Outer*>(reinterpret_cast<const char*>(this) - reinterpret_cast<const char*>(&((Outer*)nullptr)->Name)); } \
+		const Outer & get_Object() const { return *reinterpret_cast<const Outer*>(reinterpret_cast<const char*>(this) - (reinterpret_cast<const char*>(&((Outer*)nullptr)->Name) - reinterpret_cast<char*>((Outer*)nullptr))); } \
         friend Outer; \
         Name##_type() { } \
         Name##_type(const Name##_type&) { } \
@@ -41,7 +41,7 @@
 		void Set(Type value) { get_Object().set_##Name(value); } \
 		Name##_type & operator=(Type value) { Set(value); return *this; } \
     private: \
-		Outer & get_Object() { return *reinterpret_cast<Outer*>(reinterpret_cast<char*>(this) - reinterpret_cast<char*>(&((Outer*)nullptr)->Name)); } \
+		Outer & get_Object() { return *reinterpret_cast<Outer*>(reinterpret_cast<char*>(this) - (reinterpret_cast<char*>(&((Outer*)nullptr)->Name) - reinterpret_cast<char*>((Outer*)nullptr))); } \
         friend Outer; \
         Name##_type() { } \
         Name##_type(const Name##_type&) { } \
