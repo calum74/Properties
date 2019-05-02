@@ -1,2 +1,101 @@
 # Properties
-Really simple properties in C++
+Really simple properties in C++.
+
+# Summary
+This library replaces slightly cumbersome methods calls like
+```c++
+person.set_Age(30);
+assert(person.get_Adult());
+```
+with a more natural field-like interface like
+```C++
+person.Age = 30;
+assert(person.Adult);
+```
+It achieves this by defining the `Age` and `Adult` properties as follows:
+```c++
+#include <Property.hpp>
+	
+class Person
+{
+public:
+    PROPERTY(Person, Age, int);
+    GETTER(Person, Adult, bool);
+
+private:
+    int get_Age() const { return age; }
+    void set_Age(int value) { age = value; }
+    bool get_Adult() const { return Age >= 18; }
+    int age;
+};
+```
+
+# Implementation
+The implementation is extremely simple and efficient because the property can simply offset the this pointer of the property to obtain a pointer of the object containing the property. An optimizing compiler can remove the pointer manipulation, so in most cases there is no overhead of using properties. (Verified by looking at the disassembly of the optimized code.)
+
+There is no memory allocation, and no change to the size of the declaring type because the additional property fields do not store any data. (Verified by looking at `sizeof`.)
+
+# Rejected alternatives
+Using `std::function`. This can be quite convenient but simply adds too much overhead.
+
+Alternatives to macros, such as
+```c++
+  Property<Person, bool> Adult; 
+  
+  bool Property<Person, bool>::Get() const
+  {
+      return Object<&Person::Adult>.Age >= 18;
+  }
+```
+The problem with this approach is that there sometimes needs to be a type-tag to distinguish different properties with the same type in the same object, and there were just too many ways to shoot yourself in the foot.
+
+# Reference
+## Header file
+Property.hpp
+
+## Macro PROPERTY(Class, Property, Type)
+This defines a property Property in the struct or class Class. The property has the type Type which is the type used to both get and set the property. (Note that you can make this type a reference if it is safe to do so.) It is not currently supported to have a different type for the getter and setter.
+
+Class is the name of the class defining the property. The property may be declared in a public, private or protected scope.
+
+It is a compile time error if:
+	- Class does not match the type containing the property.
+	- Two properties have the same name in the same class.
+	- The get_##Property or set_##Property methods do not exist or have incompatible signatures.
+	- The get_##Property method is not const. (Note that the getter is semantically const, and may need to use various other techniques, such as mutable or pimpls to get around the const requirement. Such discussion is beyond the scope of this document. On balance, making the getter const is probably the right interface.)
+
+The property has the following methods:
+
+> Type Get() const;
+>	Calls get_##Property() in the declaring object and returns the result. The get_##Property method may be virtual (to implement virtual properties), and must be const.
+	
+>	void Set(Type t)
+>	Calls  set_##Property(t) in the declaring object. The set_##Property method may be virtual (to implement virtual properties.)
+	
+>	`operator Type() const`
+>	Same as `Get()`.
+	
+	`Type operator*() const`
+	Same as Get(). Use this when operator Type() is not working as expected.
+	
+	`ImplementationDefined & operator=(Type t)`
+	Same as `Set()`.
+	
+	Default constructor
+	The default constructor is private and it is not possible to construct the property object. (This is to prevent unsafe use of the property.)
+	
+	Copy constructor
+	The copy constructor is available but does not set the value of the property.
+	Rationale: Often, the underlying fields will be copied, and it may not make sense to set the new property. It may be unsafe for a setter to access underlying fields before they have been initialized.
+
+## Macro `GETTER(Class, Property, Type)`
+This defines a read-only property, that behaves exactly the same as PROPERTY, but it does not support the Set() method, or other functions that use `Set()`.
+
+## Thread safety
+Properties are themselves thread-safe, and may be called from multiple threads. However, it is the responsibility of the the get_ and set_ methods to implement the appropriate thread-safety.
+
+## Exceptions
+Properties do not themselves raise exceptions, and are exception-neutral. Exceptions thrown by get_ and set_ methods are passed to the caller. It is the responsibility of the get_ and set_ methods to implement appropriate exception guarantees, consistent with best C++ practice.
+
+# Supported compilers
+TODO: Test this.
