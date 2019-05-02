@@ -8,7 +8,7 @@ person.set_Age(30);
 assert(person.get_Adult());
 ```
 with a more natural field-like interface like
-```C++
+```c++
 person.Age = 30;
 assert(person.Adult);
 ```
@@ -37,65 +37,65 @@ There is no memory allocation, and no change to the size of the declaring type b
 
 # Rejected alternatives
 Using `std::function`. This can be quite convenient but simply adds too much overhead.
+```c++
+class Person
+{
+public:
+    Property<bool> Age = Property<bool>([this]() { return age; }, [this](int a) { age = a; });
+private:
+    int age;
+};
+```
 
 Alternatives to macros, such as
 ```c++
+class Person
+{
+public:
   Property<Person, bool> Adult; 
-  
-  bool Property<Person, bool>::Get() const
-  {
-      return Object<&Person::Adult>.Age >= 18;
-  }
+};
+
+bool Property<Person, bool>::Get() const
+{
+    return Object<&Person::Adult>().Age >= 18;
+}
 ```
-The problem with this approach is that there sometimes needs to be a type-tag to distinguish different properties with the same type in the same object, and there were just too many ways to shoot yourself in the foot.
+The problem with this approach is that there sometimes needs to be a type-tag to distinguish different properties with the same type in the same object, and there were just too many ways to shoot yourself in the foot. It requires the methods to be defined out of line, and need the slightly awkward `Object<&Person::Adult>()` call to map from the property to the object.
 
 # Reference
 ## Header file
 Property.hpp
 
-## Macro PROPERTY(Class, Property, Type)
-This defines a property Property in the struct or class Class. The property has the type Type which is the type used to both get and set the property. (Note that you can make this type a reference if it is safe to do so.) It is not currently supported to have a different type for the getter and setter.
+## Macro `PROPERTY(Class, Property, Type)`
+This defines a property `Property` in the struct or class `Class`. The property has the type `Type` which is the type used to both get and set the property. (Note that you can make this type a reference if it is safe to do so.) It is not currently supported to have a different type for the getter and setter.
 
-Class is the name of the class defining the property. The property may be declared in a public, private or protected scope.
+`Class` is the name of the class or struct defining the property. The property may be declared in a `public`, `private` or `protected` scope.
 
 It is a compile time error if:
-	- Class does not match the type containing the property.
-	- Two properties have the same name in the same class.
-	- The get_##Property or set_##Property methods do not exist or have incompatible signatures.
-	- The get_##Property method is not const. (Note that the getter is semantically const, and may need to use various other techniques, such as mutable or pimpls to get around the const requirement. Such discussion is beyond the scope of this document. On balance, making the getter const is probably the right interface.)
 
-The property has the following methods:
+- `Class` does not match the type containing the property.
+- Two properties have the same name in the same class.
+- The `get_##Property` or `set_##Property` methods do not exist or have incompatible signatures.
+- The `get_##Property` method is not const. (Note that the getter is semantically const, and may need to use various other techniques, such as mutable or pimpls to get around the const requirement. Such discussion is beyond the scope of this document. On balance, making the getter const is probably the right interface.)
 
-> Type Get() const;
->	Calls get_##Property() in the declaring object and returns the result. The get_##Property method may be virtual (to implement virtual properties), and must be const.
-	
->	void Set(Type t)
->	Calls  set_##Property(t) in the declaring object. The set_##Property method may be virtual (to implement virtual properties.)
-	
->	`operator Type() const`
->	Same as `Get()`.
-	
-	`Type operator*() const`
-	Same as Get(). Use this when operator Type() is not working as expected.
-	
-	`ImplementationDefined & operator=(Type t)`
-	Same as `Set()`.
-	
-	Default constructor
-	The default constructor is private and it is not possible to construct the property object. (This is to prevent unsafe use of the property.)
-	
-	Copy constructor
-	The copy constructor is available but does not set the value of the property.
-	Rationale: Often, the underlying fields will be copied, and it may not make sense to set the new property. It may be unsafe for a setter to access underlying fields before they have been initialized.
+The defined property has the following methods:
+
+- `Type Get() const;` Calls `get_##Property()` in the declaring object and returns the result. The `get_##Property` method may be `virtual` (to implement virtual properties), and must be const.
+- `void Set(Type t)` Calls `set_##Property(t)` in the declaring object. The `set_##Property` method may be `virtual` (to implement virtual properties.)
+- `operator Type() const` Same as `Get()`.	
+- `Type operator*() const` Same as Get(). Use this when `operator Type()` is not working as expected.
+- `ImplementationDefined & operator=(Type t)` Same as `Set()`.	
+- Default constructor. The default constructor is private and it is not possible to construct the property object. (This is to prevent unsafe use of the property.)
+- Copy constructor. The copy constructor is available but does not set the value of the property. Rationale: Often, the underlying fields will be copied, and it may not make sense to set the new property. It may be unsafe for a setter to access underlying fields before they have been initialized.
 
 ## Macro `GETTER(Class, Property, Type)`
-This defines a read-only property, that behaves exactly the same as PROPERTY, but it does not support the Set() method, or other functions that use `Set()`.
+This defines a read-only property, that behaves exactly the same as PROPERTY, but it does not support the `Set()` method, or other functions that use `Set()`.
 
 ## Thread safety
-Properties are themselves thread-safe, and may be called from multiple threads. However, it is the responsibility of the the get_ and set_ methods to implement the appropriate thread-safety.
+Properties are themselves thread-safe, and may be called from multiple threads. However, it is the responsibility of the the `get_` and `set_` methods to implement the appropriate thread-safety.
 
 ## Exceptions
-Properties do not themselves raise exceptions, and are exception-neutral. Exceptions thrown by get_ and set_ methods are passed to the caller. It is the responsibility of the get_ and set_ methods to implement appropriate exception guarantees, consistent with best C++ practice.
+Properties do not themselves raise exceptions, and are exception-neutral. Exceptions thrown by `get_` and `set_` methods are passed to the caller. It is the responsibility of the `get_` and `set_` methods to implement appropriate exception guarantees, consistent with C++ best practice.
 
 # Supported compilers
 TODO: Test this.
