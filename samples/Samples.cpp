@@ -27,21 +27,29 @@ private:
 	// This is a backing field for the Name property.
 	std::string name;
 
-	// This is the implementation of the getters and setters.
+	// This is the getter for the Age property.
+	// It must have the name get_XXX, where XXX is the name of the property.
+	// The getter must be const.
 	int get_Age() const { return age; }
 
-	// Add validation to the property.
+	// This is the setter of the Age property.
+	// It has the name set_XXX
+	// This setter adds validation of the property value.
 	void set_Age(int a) { 
 		if (a < 0 || a>150) throw std::runtime_error("Invalid age");
 		age = a;
 	}
 
-	// Naturally, the class can use its own properties (i.e. Age).
+	// This is the getter of the Adult property.
+	// This shows that the class can use its own properties (i.e. Age).
 	bool get_Adult() const { return Age >= 18; }
 
+	// This is the getter of the Name property.
 	// The property type can have a different type to its underlying field.
+	// In this case, the string is stored in std::string as an implementation detail.
 	const char * get_Name() const { return name.c_str(); }
 
+	// This is the setter of the Name property.
 	void set_Name(const char * n) { name = n; }
 
 	// This is a virtual getter.
@@ -51,17 +59,28 @@ private:
 
 int main()
 {
+	// Create a person
 	Person p;
 
+	// Assign 69 to the age, via the Age property.
 	p.Age = 69;
+
+	// Read the Adult property.
 	assert(p.Adult);
+
+	// Assign 17 to the Age property.
 	p.Age = 17;
 	assert(!p.Adult);
 	assert(p.YearsToRetirement == (65 - 17));
 
 	// Copying a person copies the underlying field
 	// but does not call any getters or setters.
+	// In fact the copying and assignment operators of class Person
+	// do not affect the properties.
 	auto p2 = p;
 	assert(p2.Age == 17);
+
+	// If you need to assign between properties, use the * operator
+	p.Age = *p2.Age;
 	return 0;
 }

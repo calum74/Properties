@@ -30,12 +30,15 @@ private:
 };
 ```
 
+# Installation
+Copy the file [include/Properties.hpp] into your source/library directory.
+
 # Implementation
-The implementation is extremely simple and efficient because the property can simply offset the this pointer of the property to obtain a pointer of the object containing the property. An optimizing compiler can remove the pointer manipulation, so in most cases there is no overhead of using properties. (Verified by looking at the disassembly of the optimized code.)
+The implementation is extremely simple and efficient because the property can simply offset the `this` pointer of the property to obtain a pointer of the object containing the property. An optimizing compiler can remove the pointer manipulation, so in most cases there is no overhead of using properties. (Verified by looking at the disassembly of the optimized code.)
 
 There is no memory allocation, and no change to the size of the declaring type because the additional property fields do not store any data. (Verified by looking at `sizeof`.)
 
-# Rejected alternatives
+## Rejected alternatives
 Using `std::function`. This can be quite convenient but simply adds too much overhead.
 ```c++
 class Person
@@ -64,7 +67,7 @@ The problem with this approach is that there sometimes needs to be a type-tag to
 
 # Reference
 ## Header file
-Property.hpp
+[Property.hpp](include/Property.hpp)
 
 ## Macro `PROPERTY(Class, Property, Type)`
 This defines a property `Property` in the struct or class `Class`. The property has the type `Type` which is the type used to both get and set the property. (Note that you can make this type a reference if it is safe to do so.) It is not currently supported to have a different type for the getter and setter.
@@ -90,6 +93,9 @@ The defined property has the following methods:
 
 ## Macro `GETTER(Class, Property, Type)`
 This defines a read-only property, that behaves exactly the same as PROPERTY, but it does not support the `Set()` method, or other functions that use `Set()`.
+
+## Macro `SETTER(Class, Property, Type)`
+This defines a write-only property, that behaves exactly the same as PROPERTY, but it does not support the `Get()` method, or other functions that use `Get()`.
 
 ## Thread safety
 Properties are themselves thread-safe, and may be called from multiple threads. However, it is the responsibility of the the `get_` and `set_` methods to implement the appropriate thread-safety.

@@ -117,6 +117,21 @@ int main()
 		assert(*p.Name == "Alf");  // The underlying field was assigned
 	}
 
+	// Tests a setter
+	{
+		struct Setting
+		{
+			SETTER(Setting, Stop, bool);
+			void set_Stop(bool value) { stopped = value; }
+			bool stopped;
+		} s;
+
+		s.Stop = true;
+		assert(s.stopped);
+		s.Stop = false;
+		assert(!s.stopped);
+	}
+
 	std::cout << "Tests passed\n";
 	return 0;
 }
