@@ -41,7 +41,7 @@ Using `std::function`. This can be quite convenient but simply adds too much ove
 class Person
 {
 public:
-    Property<bool> Age = Property<bool>([this]() { return age; }, [this](int a) { age = a; });
+    Property<int> Age = Property<int>([this]() { return age; }, [this](int a) { age = a; });
 private:
     int age;
 };
