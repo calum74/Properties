@@ -31,7 +31,7 @@ private:
 ```
 
 # Installation
-Copy the file [include/Property.hpp] into your favourite source/header directory.
+Copy the file [include/Property.hpp](include/Property.hpp) into your favourite source/header directory.
 
 # Implementation
 The implementation is extremely simple and efficient because the property can simply offset the `this` pointer of the property to obtain a pointer of the object containing the property. An optimizing compiler can remove the pointer manipulation, so in most cases there is no overhead of using properties. (Verified by looking at the disassembly of the optimized code.)
