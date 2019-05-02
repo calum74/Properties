@@ -31,7 +31,7 @@ private:
 ```
 
 # Installation
-Copy the file [include/Properties.hpp] into your source/library directory.
+Copy the file [include/Property.hpp] into your favourite source/header directory.
 
 # Implementation
 The implementation is extremely simple and efficient because the property can simply offset the `this` pointer of the property to obtain a pointer of the object containing the property. An optimizing compiler can remove the pointer manipulation, so in most cases there is no overhead of using properties. (Verified by looking at the disassembly of the optimized code.)
@@ -39,7 +39,7 @@ The implementation is extremely simple and efficient because the property can si
 There is no dynamic memory allocation, and minimal change to the size of the declaring type because the additional property fields do not store any data. Each property increases the size of the type by just 1 byte. (Verified by looking at `sizeof`.)
 
 ## Rejected alternatives
-Using `std::function`. This can be quite convenient but simply adds too much overhead.
+Using `std::function`. This can be quite convenient but simply adds too much overhead. For example,
 ```c++
 class Person
 {
@@ -50,12 +50,12 @@ private:
 };
 ```
 
-Alternatives to macros, such as
+Alternatives to macros, such as,
 ```c++
 class Person
 {
 public:
-  Property<Person, bool> Adult; 
+    Property<Person, bool> Adult; 
 };
 
 bool Property<Person, bool>::Get() const
@@ -63,12 +63,12 @@ bool Property<Person, bool>::Get() const
     return Object<&Person::Adult>().Age >= 18;
 }
 ```
-The problem with this approach is that there sometimes needs to be a type-tag to distinguish different properties with the same type in the same object, and there were just too many ways to shoot yourself in the foot. It requires the methods to be defined out of line, and need the slightly awkward `Object<&Person::Adult>()` call to map from the property to the object.
+The problem with this approach is that there sometimes needs to be a type-tag to distinguish different properties with the same type in the same object, and there were just too many ways to shoot yourself in the foot. It requires the methods to be defined out of line, and has the slightly awkward `Object<&Person::Adult>()` call to map from the property to the object.
 
-The assignment and copy constructors do NOT set the property. This is because it's not clear which properties should be set, and
+The assignment operator and copy constructors do NOT set the property. This is because it's not clear which properties should be set, and
 often the underlying field is copied instead. It could be dangerous to set a property before the underlying field has been initialized, making properties sensitive to declaration order.
 
-The getter is `const` to match const semantics. Getters often have side-effects, however there are other ways to solve this problem. Getters should be semantically const.
+The getter is `const` to match const semantics. Getters often have side-effects, which makes the `const` occasionally inconvenient, however there are other ways to solve this problem. Getters should be semantically const.
 
 # Reference
 ## Header file
@@ -83,7 +83,7 @@ It is a compile time error if:
 
 - `Class` does not match the type containing the property.
 - Two properties have the same name in the same class.
-- The `get_##Property` or `set_##Property` methods do not exist or have incompatible signatures.
+- The `get_##Property` or `set_##Property` methods do not exist or have unsuitable signatures.
 - The `get_##Property` method is not const. (Note that the getter is semantically const, and may need to use various other techniques, such as mutable or pimpls to get around the const requirement. Such discussion is beyond the scope of this document. On balance, making the getter const is probably the right interface.)
 
 The defined property has the following methods:
@@ -94,13 +94,13 @@ The defined property has the following methods:
 - `Type operator*() const` Same as Get(). Use this when `operator Type()` is not working as expected.
 - `ImplementationDefined & operator=(Type t)` Same as `Set()`.	
 - Default constructor. The default constructor is private and it is not possible to construct the property object. (This is to prevent unsafe use of the property.)
-- Copy constructor. The copy constructor is available but does not set the value of the property. Rationale: Often, the underlying fields will be copied, and it may not make sense to set the new property. It may be unsafe for a setter to access underlying fields before they have been initialized.
+- Copy constructor. The copy constructor is available but does not set the value of the property. (Rationale: Often, the underlying fields will be copied, and it may not make sense to set the new property. It may be unsafe for a setter to access underlying fields before they have been initialized.)
 
 ## Macro `GETTER(Class, Property, Type)`
-This defines a read-only property, that behaves exactly the same as PROPERTY, but it does not support the `Set()` method, or other functions that use `Set()`.
+This defines a read-only property, that behaves exactly the same as `PROPERTY`, but it does not support the `Set()` method, or other functions that use `Set()`.
 
 ## Macro `SETTER(Class, Property, Type)`
-This defines a write-only property, that behaves exactly the same as PROPERTY, but it does not support the `Get()` method, or other functions that use `Get()`.
+This defines a write-only property, that behaves exactly the same as `PROPERTY`, but it does not support the `Get()` method, or other functions that use `Get()`.
 
 ## Thread safety
 Properties are themselves thread-safe, and may be called from multiple threads. However, it is the responsibility of the the `get_` and `set_` methods to implement the appropriate thread-safety.
