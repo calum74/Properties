@@ -1,5 +1,5 @@
 /*
-	This is a lightweight (zero-overhead) mechanism to add C#-style properties to structs
+	This is a lightweight mechanism to add C#-style properties to structs
 	and classes. This can make the interface to the class nicer by making getters
 	and setters field-like. For example:
 
@@ -36,6 +36,7 @@
     private: \
         friend Outer; \
         Name##_type() { } \
+        Name##_type(const Name##_type&) { } \
 	} Name;
 
 #define GETTER(Outer, Name, Type) \
@@ -47,4 +48,5 @@
     private: \
         friend Outer; \
         Name##_type() { } \
+        Name##_type(const Name##_type&) { } \
 	} Name;

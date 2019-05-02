@@ -2,6 +2,7 @@
 #include "Property.hpp"
 #include <string>
 #include <cassert>
+#include <stdexcept>
 
 // This is a class that contains properties.
 class Person
@@ -31,7 +32,7 @@ private:
 
 	// Add validation to the property.
 	void set_Age(int a) { 
-		if (a < 0 || a>150) throw std::exception("Invalid age");
+		if (a < 0 || a>150) throw std::runtime_error("Invalid age");
 		age = a;
 	}
 
@@ -40,19 +41,16 @@ private:
 
 	// The property type can have a different type to its underlying field.
 	const char * get_Name() const { return name.c_str(); }
+
 	void set_Name(const char * n) { name = n; }
 
 	// This is a virtual getter.
-	virtual int get_YearsToRetirement() const
-	{
-		return 65 - Age;
-	}
+	virtual int get_YearsToRetirement() const { return 65 - Age; }
 };
 
 
 int main()
 {
-	//
 	Person p;
 
 	p.Age = 69;
@@ -61,7 +59,8 @@ int main()
 	assert(!p.Adult);
 	assert(p.YearsToRetirement == (65 - 17));
 
-	// Copying a person.
+	// Copying a person copies the underlying field
+	// but does not call any getters or setters.
 	auto p2 = p;
 	assert(p2.Age == 17);
 	return 0;
