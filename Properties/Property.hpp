@@ -1,84 +1,50 @@
+/*
+	This is a lightweight (zero-overhead) mechanism to add C#-style properties to structs
+	and classes. This can make the interface to the class nicer by making getters
+	and setters field-like. For example:
 
-template<typename ObjectType, typename T, typename Tag = void>
-struct Property
-{
-	typedef T value_type;
-	value_type Get();
-	void Set(value_type t);
-
-	Property() { }
-	Property(value_type init) { Set(init); }
-	Property(const Property & src) {
-		Set(const_cast<Property&>(src).Get());
-	}
-
-	Property & operator=(const Property & src)
+	class Person
 	{
-		Set(const_cast<Property&>(src).Get());
-		return *this;
-	}
+	public:
+	    PROPERTY(Person, Name, const std::string&);
+		GETTER(Person, Adult, bool);
+		PROPERTY(Person, Age, int);
+	private:
+	    const std::string &get_Name() const;
+		void set_Name(const std::string&);
+		int get_Age() const;
+		void set_Age(int);
+		bool get_Adult() const;
+	};
 
-	value_type operator*() { return Get(); }
+	Person p;
+	p.Name = "Fred";
+*/
 
-	/*
-		Returns the object containing this property.
+#pragma once
 
-		This assumes that the "this" pointer refers to a field inside the object.
-		The address of the object will always be a fixed offset away from the
-		address of the property. This delta is a compile-time constant, which
-		makes the code efficient.
-	*/
-	template<Property ObjectType::*Member>
-	ObjectType & Object()
-	{
-		return *reinterpret_cast<ObjectType*>(reinterpret_cast<char*>(this) - reinterpret_cast<char*>(&((ObjectType*)nullptr->*Member)));
-	}
+#define PROPERTY(Outer, Name, Type) \
+	struct Name##_type { \
+		const Outer & Object() const { return *reinterpret_cast<const Outer*>(reinterpret_cast<const char*>(this) - reinterpret_cast<const char*>(&((Outer*)nullptr)->Name)); } \
+		Outer & Object() { return *reinterpret_cast<Outer*>(reinterpret_cast<char*>(this) - reinterpret_cast<char*>(&((Outer*)nullptr)->Name)); } \
+		Type Get() const { return Object().get_##Name(); } \
+		void Set(Type value) { Object().set_##Name(value); } \
+		Name##_type & operator=(Type value) { Set(value); return *this; } \
+		operator Type() const { return Get(); } \
+		Type operator*() const { return Get(); } \
+		Name##_type & operator=(const Name##_type & src) { Set(src.Get()); return *this; } \
+    private: \
+        friend Outer; \
+        Name##_type() { } \
+	} Name;
 
-	operator value_type() { return Get(); }
-
-	Property & operator=(value_type t) { Set(t); return *this; }
-};
-
-template<typename Tag>
-class PropertyTraits;
-
-template<typename TraitsType>
-class Property2
-{
-public:
-	typedef typename TraitsType::value_type value_type;
-
-	value_type Get() const
-	{
-		return PropertyTraits<TraitsType>::Get(*this);
-	}
-
-	value_type operator*() const { return Get(); }
-};
-
-#define DECLARE_PROPERTY(Tag, Type) struct Tag { typedef Type value_type; };
-
-#define DEFINE_PROPERTY2(Object,Tag,Field,Getter,Setter) \
-	template<> class PropertyTraits<Tag> : \
-		public BaseTraits<Tag, Object, &Object::Getter, &Object::Setter, &Object::Field> { };
-
-#define DEFINE_PROPERTY(Object,Tag,Field) DEFINE_PROPERTY2(Object,Tag,Field,get_##Field,set_##Field)
-
-template<typename Tag, typename ObjectType, typename Tag::value_type(ObjectType::*Getter)() const,
-	void(ObjectType::*Setter)(typename Tag::value_type), Property2<Tag> ObjectType::*Member>
-	class BaseTraits
-{
-public:
-	typedef Tag tag;
-	typedef ObjectType object;
-	typedef typename Tag::value_type value_type;
-
-	static const ObjectType & Object(const Property2<Tag> & prop)
-	{
-		return *reinterpret_cast<const ObjectType*>(reinterpret_cast<const char*>(&prop) - reinterpret_cast<const char*>(&((ObjectType*)nullptr->*Member)));
-	}
-
-	static inline value_type Get(const Property2<Tag> & prop) {
-		return (Object(prop).*Getter)();
-	}
-};
+#define GETTER(Outer, Name, Type) \
+	struct Name##_type { \
+		const Outer & Object() const { return *reinterpret_cast<const Outer*>(reinterpret_cast<const char*>(this) - reinterpret_cast<const char*>(&((Outer*)nullptr)->Name)); } \
+		Type Get() const { return Object().get_##Name(); } \
+		operator Type() const { return Get(); } \
+		Type operator*() const { return Get(); } \
+    private: \
+        friend Outer; \
+        Name##_type() { } \
+	} Name;
