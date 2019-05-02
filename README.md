@@ -33,7 +33,7 @@ private:
 # Implementation
 The implementation is extremely simple and efficient because the property can simply offset the this pointer of the property to obtain a pointer of the object containing the property. An optimizing compiler can remove the pointer manipulation, so in most cases there is no overhead of using properties. (Verified by looking at the disassembly of the optimized code.)
 
-There is no memory allocation, and no change to the size of the declaring type because the additional property fields do not store any data. (Verified by looking at `sizeof`.)
+There is no dynamic memory allocation, and minimal change to the size of the declaring type because the additional property fields do not store any data. Each property increases the size of the type by just 1 byte. (Verified by looking at `sizeof`.)
 
 # Rejected alternatives
 Using `std::function`. This can be quite convenient but simply adds too much overhead.
@@ -59,6 +59,13 @@ bool Property<Person, bool>::Get() const
 {
     return Object<&Person::Adult>().Age >= 18;
 }
+This is rejected simply because there is too much scope for making mistakes with the `Object<>()` function.
+
+The assignment and copy constructors do NOT set the property. This is because it's not clear which properties should be set, and
+often the underlying field is copied instead. It could be dangerous to set a property before the underlying field has been initialized, making properties sensitive to declaration order.
+
+The getter is `const` to match const semantics. Getters often have side-effects, however there are other ways to solve this problem. Getters should be semantically const.
+
 ```
 The problem with this approach is that there sometimes needs to be a type-tag to distinguish different properties with the same type in the same object, and there were just too many ways to shoot yourself in the foot. It requires the methods to be defined out of line, and need the slightly awkward `Object<&Person::Adult>()` call to map from the property to the object.
 
